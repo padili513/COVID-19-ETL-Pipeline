@@ -26,4 +26,6 @@ def notify(text):
 
 def lambda_handler(event, context):
 
-    
+    # Extraction
+    df_ny = pd.read_csv(ny_url, index_col = 'date')
+    df_jh = pd.read_csv(jh_url)
