@@ -3,7 +3,6 @@ import logging
 import transformation as transform
 import boto3
 import pandas as pd
-from dynamodb_json import json_util as json
 import numpy as np
 
 def alert():
@@ -112,7 +111,7 @@ def lambda_handler(event, context):
         df_nyt = transform.convert_to_int_obj(df_nyt, 'deaths')
 
         df_jh = transform.convert_to_date_obj(df_jh, 'Date', '%Y-%m-%d')
-        df_jh = transform.convert_to_int_obj(df_nyt, 'Recovered')
+        df_jh = transform.convert_to_int_obj(df_jh, 'Recovered')
         df_jh = transform.filter_rows(df_jh, 'Country/Region', 'US')
         df_jh = transform.filter_columns(df_jh, ['Date', 'Recovered'])
         df_jh = df_jh.rename(columns={'Date': 'date', 'Recovered':'recoveries'})

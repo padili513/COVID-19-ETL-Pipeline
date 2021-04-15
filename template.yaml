@@ -8,7 +8,7 @@ Resources:
     Properties:
       LayerName: ETLLayer
       Description: Contains libraries necessary for ETLLambda
-      ContentUri: s3://covid-19-etl-pipeline/COVID-19-ETL-Pipeline
+      ContentUri: .
       CompatibleRuntimes:
         - python3.8
 
@@ -16,23 +16,25 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: ETLLambda
-      CodeUri: s3://covid-19-etl-pipeline/COVID-19-ETL-Pipeline
+      CodeUri: .
       Handler: etl.lambda_handler
       Runtime: python3.8
       Description: A function that performs the ETL job
+      MemorySize: 512
+      Timeout: 120
       Layers:
         - !Ref ETLLayer
       Environment:
         Variables:
           nyt_url: https://raw.githubusercontent.com/nytimes/covid-19-data/master/us.csv
-          jh_url: https://raw.githubusercontent.com/datasets/covid-19/master/data/time-series-19-covid-combined.csv?opt_id=oeu1603289369465r0.029250972293521915
+          jh_url: https://raw.githubusercontent.com/datasets/covid-19/master/data/time-series-19-covid-combined.csv
           db_table: !Ref COVID19Table
           sns_topic: !Ref NotifySNS
       Events:
         MyCloudWatchEvent:
           Type: Schedule
           Properties:
-            Schedule: cron(0 16 ? * * *)
+            Schedule: cron(15 22 ? * * *)
 
   COVID19Table:
     Type: AWS::Serverless::SimpleTable

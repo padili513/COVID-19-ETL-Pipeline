@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "covid-19-etl"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-152j4k6rfzdkz"
+s3_prefix = "covid-19-etl"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
