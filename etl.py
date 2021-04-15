@@ -133,3 +133,4 @@ def lambda_handler(event, context):
             f"Please see log {context.log_group_name} for more info."
             f"Error: {e}"
         ))
+        exit(1)
