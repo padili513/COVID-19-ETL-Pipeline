@@ -8,7 +8,7 @@ Resources:
     Properties:
       LayerName: ETLLayer
       Description: Contains libraries necessary for ETLLambda
-      ContentUri: layers/
+      ContentUri: s3://covid-19-etl-pipeline/COVID-19-ETL-Pipeline
       CompatibleRuntimes:
         - python3.8
 
@@ -16,9 +16,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: ETLLambda
+      CodeUri: s3://covid-19-etl-pipeline/COVID-19-ETL-Pipeline
       Handler: etl.lambda_handler
       Runtime: python3.8
-      CodeUri: etl.lambda_handler
       Description: A function that performs the ETL job
       Layers:
         - !Ref ETLLayer
