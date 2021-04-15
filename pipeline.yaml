@@ -26,7 +26,7 @@ Resources:
         Variables:
           nyt_url: https://raw.githubusercontent.com/nytimes/covid-19-data/master/us.csv
           jh_url: https://raw.githubusercontent.com/datasets/covid-19/master/data/time-series-19-covid-combined.csv?opt_id=oeu1603289369465r0.029250972293521915
-          db_table: !Ref MyDynamoDBTable
+          db_table: !Ref COVID19Table
           sns_topic: !Ref NotifySNS
       Events:
         MyCloudWatchEvent:
@@ -34,15 +34,15 @@ Resources:
           Properties:
             Schedule: cron(0 16 ? * * *)
 
-  MyDynamoDBTable:
+  COVID19Table:
     Type: AWS::Serverless::SimpleTable
     Properties:
-      TableName: MyDynamoDBTable
+      TableName: covid-19-table
 
   NotifySNS:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: Notify_subscriber
+      TopicName: Notify_Pedram
       Subscription:
         - Endpoint: "pedramadili@gmail.com"
           Protocol: email
