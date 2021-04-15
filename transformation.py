@@ -2,7 +2,7 @@ import pandas as pd
 
 # Cleaning
 def convert_to_date_obj(df, field, current_format):
-    df[field] = pd.to_datetime(df[date], format=current_format)
+    df[field] = pd.to_datetime(df[field], format=current_format)
     return df
 
 def convert_to_int_obj(df, field):

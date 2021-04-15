@@ -11,7 +11,7 @@ class Test(unittest.TestCase):
     def test_convert_date(self):
         """Tests converting date"""
         df = pd.DataFrame({"date":'2020-01-01',"cases": [1],"deaths": [2], "recoveries": [3]})
-        df = transform.convert_to_date_obj(df, "date")
+        df = transform.convert_to_date_obj(df, "date", '%Y-%m-%d')
         self.assertEqual(df['date'].dtypes, "datetime64[ns]")
 
     def test_filter_criteria(self):
