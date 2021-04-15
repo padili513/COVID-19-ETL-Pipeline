@@ -27,5 +27,19 @@ def notify(text):
 def lambda_handler(event, context):
 
     # Extraction
-    df_ny = pd.read_csv(ny_url, index_col = 'date')
-    df_jh = pd.read_csv(jh_url)
+    df_nyt = pd.read_csv(nyt_url, index_col='date')
+    df_jh = pd.read_csv(jh_url, index_col='Date')
+
+    # Transformation
+    df_nyt = transform.convert_to_date_obj(df_nyt, 'date', '%Y-%m-%d')
+    df_nyt = transform.convert_to_int_obj(df_nyt, 'cases')
+    df_nyt = transform.convert_to_int_obj(df_nyt, 'deaths')
+
+    df_jh = transform.convert_to_date_obj(df_jh, 'Date', '%Y-%m-%d')
+    df_jh = transform.convert_to_int_obj(df_nyt, 'Recovered')
+    df_jh = transform.filter_rows(df_jh, 'Country/Region', 'US')
+    df_jh = transform.filter_columns(df_jh, ['Date', 'Recovered'])
+    df_jh = df_jh.rename(columns={'Date': 'date', 'Recovered':'recoveries'})
+
+    df_joined = transform.merge(df_nyt, df_jh[['date', 'recoveries']], 'date', 'left')
+    df_joined = transform.drop_nonexistent(df_joined)
