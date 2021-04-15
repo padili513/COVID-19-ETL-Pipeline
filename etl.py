@@ -17,15 +17,38 @@ def lambda_handler(event, context):
     sns = boto3.client('sns')
     dynamodb = boto3.client('dynamodb')
 
-    def notify(text):
-        try:
-            sns.publish(TopicArn=os.environ['sns_topic'],
-                        Subject='COVID-19 ETL Summary',
-                        Message=text)
-        except Exception as e:
-            logger.error("Sending notification failed: {}".format(e))
-            exit(1)
-        logger.info(text)
+    def alert():
+        """Sends the alert"""
+        message = ""
+
+        func_name = context.function_name
+        logger.info(func_name)
+        trigger_arn = context.invoked_function_arn
+        logger.info(trigger_arn)
+        log_group_name = context.log_group_name
+        logger.info(log_group_name)
+        log_stream_name = context.log_stream_name
+        logger.info(log_stream_name)
+
+        message += (
+            f"Function: {func_name}\n"
+            f"Trigger: {trigger_arn}\n"
+            f"Log Group: {log_group_name}\n"
+            f"Log Stream: {log_stream_name}\n"
+            f"\nNew rows added:\n"
+        )
+
+        new_rows = []
+        for record in event["Records"]:
+            if record["eventName"] == "INSERT":
+                if "NewImage" in record["dynamodb"]:
+                    new_rows.append(record["dynamodb"]["NewImage"])
+
+        new_rows_str = [str(x) for x in new_rows]
+        message += "\n".join(new_rows_str)
+
+        sns.publish(TopicArn=sns_topic, Message=message)
+        return message
 
     def db_connect():
         """Connects to the DynamoDB Table"""
@@ -102,6 +125,7 @@ def lambda_handler(event, context):
         new_data = data_diff(df_joined)
         logger.info("New data: %s", new_data)
         db_store(new_data)
+        alert()
     except Exception as e:
         # Doing a general catch because I want all errors to be pushed to SNS
         sns.publish(TopicArn=sns_topic, Message=(
