@@ -104,8 +104,8 @@ def lambda_handler(event, context):
 
     try:
         # Extraction
-        df_nyt = pd.read_csv(os.environ['nyt_url'])
-        df_jh = pd.read_csv(os.environ['jh_url'])
+        df_nyt = pd.read_csv(os.environ['nyt_url'], index_col=None)
+        df_jh = pd.read_csv(os.environ['jh_url'], index_col=None)
 
         # Transformation
         df_nyt = transform.convert_to_date_obj(df_nyt, 'date', '%Y-%m-%d')
