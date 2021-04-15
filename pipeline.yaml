@@ -12,7 +12,7 @@ Resources:
       CompatibleRuntimes:
         - python3.8
 
-ETLLambda:
+  ETLLambda:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: ETLLambda
@@ -22,6 +22,12 @@ ETLLambda:
       Description: A function that performs the ETL job
       Layers:
         - !Ref ETLLayer
+      Environment:
+        Variables:
+          ny_url: https://raw.githubusercontent.com/nytimes/covid-19-data/master/us.csv
+          jh_url: https://raw.githubusercontent.com/datasets/covid-19/master/data/time-series-19-covid-combined.csv?opt_id=oeu1603289369465r0.029250972293521915
+          db_table: !Ref MyDynamoDBTable
+          sns_topic: !Ref NotifySNS
       Events:
         MyCloudWatchEvent:
           Type: Schedule
