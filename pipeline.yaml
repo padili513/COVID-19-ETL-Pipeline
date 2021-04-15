@@ -3,57 +3,35 @@ Transform: 'AWS::Serverless-2016-10-31'
 Description: Automate an ETL processing pipeline for COVID-19 data using Python and AWS
 
 Resources:
-  ETLLambda:
+  ETLLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: ETLLayer
+      Description: Contains libraries necessary for ETLLambda
+      ContentUri: layers/
+      CompatibleRuntimes:
+        - python3.8
+
+ETLLambda:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: ETLLambda
       Handler: etl.lambda_handler
       Runtime: python3.8
-      CodeUri: s3://covid-19-etl/etl.py
+      CodeUri: etl.lambda_handler
       Description: A function that performs the ETL job
-      MemorySize: 128
-      Timeout: 120
-      Policies:
-       - AWSLambdaExecute
-       - DynamoDBCrudPolicy:
-          TableName: !Ref MyDynamoDBTable
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref MyDynamoDBTable
+      Layers:
+        - !Ref ETLLayer
       Events:
         MyCloudWatchEvent:
           Type: Schedule
           Properties:
             Schedule: cron(0 16 ? * * *)
 
-  ETLLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: ETLLayer
-      Description: Contains libraries necessary for ETLLambda
-      ContentUri: 's3://covid-19-etl/etl.zip'
-      CompatibleRuntimes:
-        - python3.8
-
   MyDynamoDBTable:
-    Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
+    Type: AWS::Serverless::SimpleTable
     Properties:
       TableName: MyDynamoDBTable
-      AttributeDefinitions:
-        - AttributeName: ListId
-          AttributeType: S
-        - AttributeName: Date
-          AttributeType: S
-      KeySchema:
-        - AttributeName: ListId
-          KeyType: HASH
-        - AttributeName: Date
-          KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST
-      ProvisionedThroughput:
-        ReadCapacityUnits: 0
-        WriteCapacityUnits: 0
 
   NotifySNS:
     Type: AWS::SNS::Topic
