@@ -14,6 +14,7 @@ Resources:
 
   ETLLambda:
     Type: AWS::Serverless::Function
+    DependsOn: COVID19Table
     Properties:
       FunctionName: ETLLambda
       CodeUri: .
@@ -28,13 +29,16 @@ Resources:
         Variables:
           nyt_url: https://raw.githubusercontent.com/nytimes/covid-19-data/master/us.csv
           jh_url: https://raw.githubusercontent.com/datasets/covid-19/master/data/time-series-19-covid-combined.csv
-          db_table: !Ref COVID19Table
+          # db_table: !Ref COVID19Table
           sns_topic: !Ref NotifySNS
+      Policies:
+        - AmazonSNSFullAccess
+        - AmazonDynamoDBFullAccess
       Events:
         MyCloudWatchEvent:
           Type: Schedule
           Properties:
-            Schedule: cron(15 22 ? * * *)
+            Schedule: cron(40 20 ? * * *)
 
   COVID19Table:
     Type: AWS::Serverless::SimpleTable
@@ -44,7 +48,7 @@ Resources:
   NotifySNS:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: Notify_Pedram
+      TopicName: Notify_Subscriber
       Subscription:
         - Endpoint: "pedramadili@gmail.com"
           Protocol: email

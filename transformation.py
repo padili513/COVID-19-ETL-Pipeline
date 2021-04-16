@@ -6,8 +6,7 @@ def convert_to_date_obj(df, field, current_format):
     return df
 
 def convert_to_int_obj(df, field):
-    df[field] = pd.to_numeric(df[field])
-    return df
+    df[field] = df[field].astype(int)
 
 # Joining
 def merge(df1, df2, on_field, how_type):

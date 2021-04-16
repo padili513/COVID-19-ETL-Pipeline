@@ -35,7 +35,7 @@ def alert():
     new_rows_str = [str(x) for x in new_rows]
     message += "\n".join(new_rows_str)
 
-    sns.publish(TopicArn=sns_topic, Message=message)
+    sns.publish(TopicArn=topic_arn, Message=message)
     return message
 
 def db_connect():
@@ -56,6 +56,7 @@ def db_store(df: pd.DataFrame):
 
 def db_load() -> pd.DataFrame:
     """Loads data from DynamoDB into Pandas DataFrame"""
+    print(db_table)
     response = db_table.scan()
     data = response["Items"]
     while "LastEvaluatedKey" in response:
@@ -95,10 +96,15 @@ def lambda_handler(event, context):
     logger.info(event)
     logger.info(context)
 
-    sns_topic = os.environ['sns_topic']
     sns = boto3.client('sns')
+    topic_arn = sns.list_topics()['Topics'][0]['TopicArn']
+    # table_name = 'covid-19-table'
     dynamodb = boto3.client('dynamodb')
-    db_table = db_connect()
+    waiter = dynamodb.get_waiter('table_exists')
+    waiter.wait(TableName="covid-19-table")
+    dynamodb = boto3.resource('dynamodb')
+    db_table = dynamodb.Table("covid-19-table")
+    print(db_table.table_arn)
 
     try:
         # Extraction
@@ -107,17 +113,15 @@ def lambda_handler(event, context):
 
         # Transformation
         df_nyt = transform.convert_to_date_obj(df_nyt, 'date', '%Y-%m-%d')
-        df_nyt = transform.convert_to_int_obj(df_nyt, 'cases')
-        df_nyt = transform.convert_to_int_obj(df_nyt, 'deaths')
 
         df_jh = transform.convert_to_date_obj(df_jh, 'Date', '%Y-%m-%d')
-        df_jh = transform.convert_to_int_obj(df_jh, 'Recovered')
         df_jh = transform.filter_rows(df_jh, 'Country/Region', 'US')
         df_jh = transform.filter_columns(df_jh, ['Date', 'Recovered'])
         df_jh = df_jh.rename(columns={'Date': 'date', 'Recovered':'recoveries'})
 
         df_joined = transform.merge(df_nyt, df_jh[['date', 'recoveries']], 'date', 'left')
         df_joined = transform.drop_nonexistent(df_joined)
+        transform.convert_to_int_obj(df_joined, 'recoveries')
 
         # Load
         new_data = data_diff(df_joined)
@@ -126,9 +130,9 @@ def lambda_handler(event, context):
         alert()
     except Exception as e:
         # Doing a general catch because I want all errors to be pushed to SNS
-        sns.publish(TopicArn=sns_topic, Message=(
-            f"There was an error in function {context.function_name}"
-            f"Please see log {context.log_group_name} for more info."
+        sns.publish(TopicArn=topic_arn, Message=(
+            f"There was an error in function {context.function_name}.\n"
+            f"Please see log {context.log_group_name} for more info.\n"
             f"Error: {e}"
         ))
         exit(1)
