@@ -3,15 +3,6 @@ Transform: 'AWS::Serverless-2016-10-31'
 Description: Automate an ETL processing pipeline for COVID-19 data using Python and AWS
 
 Resources:
-  ETLLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: ETLLayer
-      Description: Contains libraries necessary for ETLLambda
-      ContentUri: .
-      CompatibleRuntimes:
-        - python3.8
-
   ETLLambda:
     Type: AWS::Serverless::Function
     DependsOn: COVID19Table
@@ -23,14 +14,11 @@ Resources:
       Description: A function that performs the ETL job
       MemorySize: 512
       Timeout: 120
-      Layers:
-        - !Ref ETLLayer
       Environment:
         Variables:
-          nyt_url: https://raw.githubusercontent.com/nytimes/covid-19-data/master/us.csv
-          jh_url: https://raw.githubusercontent.com/datasets/covid-19/master/data/time-series-19-covid-combined.csv
-          # db_table: !Ref COVID19Table
-          sns_topic: !Ref NotifySNS
+          NYT_URL: https://raw.githubusercontent.com/nytimes/covid-19-data/master/us.csv
+          JH_URL: https://raw.githubusercontent.com/datasets/covid-19/master/data/time-series-19-covid-combined.csv
+          SNS_TOPIC_ARN: !Ref NotifySNS
       Policies:
         - AmazonSNSFullAccess
         - AmazonDynamoDBFullAccess
@@ -38,12 +26,48 @@ Resources:
         MyCloudWatchEvent:
           Type: Schedule
           Properties:
-            Schedule: cron(40 20 ? * * *)
+            Schedule: cron(00 13 ? * * *)
+
+  NotifyLambda:
+    Type: AWS::Serverless::Function
+    DependsOn: COVID19Table
+    Properties:
+      FunctionName: NotifyLambda
+      CodeUri: .
+      Handler: notify.alert
+      Runtime: python3.8
+      Description: A function that notifies the subscriber via SNS
+      MemorySize: 512
+      Timeout: 120
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref NotifySNS
+      Policies:
+        - AmazonSNSFullAccess
+        - AmazonDynamoDBFullAccess
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Enabled: true
+            Stream: !GetAtt COVID19Table.StreamArn
+            BatchSize: 100
+            MaximumBatchingWindowInSeconds: 10
+            StartingPosition: LATEST
 
   COVID19Table:
-    Type: AWS::Serverless::SimpleTable
+    Type: AWS::DynamoDB::Table
     Properties:
       TableName: covid-19-table
+      AttributeDefinitions:
+        - AttributeName: date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: date
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
 
   NotifySNS:
     Type: AWS::SNS::Topic

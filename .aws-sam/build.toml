@@ -6,6 +6,6 @@ codeuri = "/Users/pedramadili/Documents/CloudGuruChallenge/COVID-19-ETL-Pipeline
 runtime = "python3.8"
 source_md5 = ""
 packagetype = "Zip"
-functions = ["ETLLambda"]
+functions = ["ETLLambda", "NotifyLambda"]
 
 [layer_build_definitions]
