@@ -1,4 +1,4 @@
-# COVID-19-ETL-Pipeline
+# COVID-19 ETL Pipeline
 Automated ETL processing pipeline for COVID-19 data using Python and AWS
 
 ## 1. ETL Job
